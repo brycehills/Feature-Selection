@@ -6,7 +6,31 @@ def normalize(X, x_min, x_max):
     nom = (X-X.min(axis=0))*(x_max-x_min)
     denom = X.max(axis=0) - X.min(axis=0)
     denom[denom==0] = 1
-    return x_min + nom/denom 
+    return x_min + nom/denom
+
+
+def forwardSelection(features):
+
+	flist = [] 			# list of features
+	best = []			# list of features with highest accuracy
+	topscore = 0.0		# the current max accuracy score
+	appendItem = 0.0	# current best item
+
+	# find best
+	for i in range(0, features.shape[1]):
+		for j in range(0, features.shape[1]):
+			if(j not in flist):
+				#find score with current iteration
+				#score = crossoneout(flist, j) - have to create this in order to test
+				print("Using feature(s): {", ','.join(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
+				if(score > topscore):
+					topscore = score 
+					appendItem = j
+					
+		flist.append(j)
+
+	best = flist		
+	return best
 
 #display algorithm UI
 def printAlgorithms():
@@ -26,13 +50,13 @@ def main():
 	classes = matrix[:,0]	
 	features = matrix[:,1:]
 	
-	print(features)
-	
+	print("Normalizing the data...\n")
 	features = normalize(features, np.min(features), np.max(features))
 	
-	print(features)
-	
 	printAlgorithms()
-	input("\nEnter Selection: ")
+	choice = input("\nEnter Selection: ")
+	
+	if(choice == "1"):
+		forwardSelection(features)
 	
 if __name__ == "__main__": main()
