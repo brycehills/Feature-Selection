@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import sys
 
 #ref - https://datascience.stackexchange.com/questions/39142/normalize-matrix-in-python-numpy
@@ -9,26 +10,33 @@ def normalize(X, x_min, x_max):
     return x_min + nom/denom
 	
 def crossoneout(matrix, classes, flist ,feat):
-	dist = 0.0			# distance
-	minDistance = 0.0	# current min distance
-	nn = 0				# nearest neighbor
-	correct = 0			# number of correctly classified instances				
+	dist = 0.0				# distance
+	minDistance = 1000.0	# current min distance
+	nn = 0					# nearest neighbor
+	correct = 0				# number of correctly classified instances	
+
+	flist.append(feat)
 	
 	#iterate rows to test all instances
 	for i in range(0,len(matrix)):
 		for j in range(0,len(matrix)):
+			sum = 0.0		# re init sum
 			if(j!=i):		#do not calc dist to self (otherwise dist will be zero)
-				for(k in range(0,len(flist)):	#only calc with specified features
-				#dist = euclidean()
-				#if(dist < minDistance):
-					#minDistance = dist
-					#nn = j
-		if(classes[i] == classes[nn]):
-			correct+=1
+				for k in range(0,len(flist)):	#only calc with specified features
+					diff = matrix[j][flist[k]] - matrix[i][flist[k]]
+					square = math.pow(diff,2)
+					sum += square   
+				dist = math.sqrt(sum)
+				if(dist < minDistance):
+					minDistance = dist
+					nn = j
+				if(classes[i] == classes[nn]):
+					correct+=1 #inc num of success classifications
+			
+	flist.remove(feat)
 			
 	return correct/len(matrix)
-				
-
+			
 
 def forwardSelection(matrix, features,classes):
 
@@ -43,18 +51,22 @@ def forwardSelection(matrix, features,classes):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				#score = crossoneout(matrix, classes, flist, j) - have to create this in order to test
-				print("Using feature(s): {", ','.join(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
-				if(score > topscore):
+				score = crossoneout(matrix, classes, flist, j) 
+				#print("Current score = ",score)
+				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score, "%")
+				if(score >= topscore):
 					topscore = score 
 					appendItem = j
 					
-		flist.append(j)
+		if(appendItem not in flist):			
+			flist.append(appendItem)
 		
 		#make sure we save the actual best combination of feats
 		if(topscore > maxscore):
 			maxscore = topscore
 			best = flist
+			
+	print("Finished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore ,"%")
 	return best
 
 #display algorithm UI
@@ -74,6 +86,8 @@ def main():
 	#save first column of classes
 	classes = matrix[:,0]	
 	features = matrix[:,1:]
+	
+	print("This dataset has ", features.shape[1] ," features (not including the class attribute), with ",len(features)," instances. \n")
 	
 	print("Normalizing the data...\n")
 	features = normalize(features, np.min(features), np.max(features))
