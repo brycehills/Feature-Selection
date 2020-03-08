@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import sys
-
+# the small dataset, accuracy can be 0.89  when using only features 5 7 3; while on the large dataset, accuracy can be 0.949 when using only features 27 15 1.
 #ref - https://datascience.stackexchange.com/questions/39142/normalize-matrix-in-python-numpy
 def normalize(X, x_min, x_max):
     nom = (X-X.min(axis=0))*(x_max-x_min)
@@ -11,9 +11,11 @@ def normalize(X, x_min, x_max):
 	
 def crossoneout(matrix, classes, flist ,feat):
 	dist = 0.0				# distance
-	minDistance = 1000.0	# current min distance
+	minDistance = 9999.0	# current min distance
 	nn = 0					# nearest neighbor
 	correct = 0				# number of correctly classified instances	
+	total = 0
+	countlist = []
 
 	flist.append(feat)
 	
@@ -23,6 +25,7 @@ def crossoneout(matrix, classes, flist ,feat):
 			sum = 0.0		# re init sum
 			if(j!=i):		#do not calc dist to self (otherwise dist will be zero)
 				for k in range(0,len(flist)):	#only calc with specified features
+					total+=1
 					diff = matrix[j][flist[k]] - matrix[i][flist[k]]
 					square = math.pow(diff,2)
 					sum += square   
@@ -30,12 +33,13 @@ def crossoneout(matrix, classes, flist ,feat):
 				if(dist < minDistance):
 					minDistance = dist
 					nn = j
-				if(classes[i] == classes[nn]):
-					correct+=1 #inc num of success classifications
+		if(classes[i] == classes[nn]):
+			correct = correct + 1 #inc num of success classifications
 			
 	flist.remove(feat)
 			
-	return correct/len(matrix)
+	print("correct: ", correct, "total: ", total)
+	return correct/total
 			
 
 def forwardSelection(matrix, features,classes):
@@ -46,16 +50,16 @@ def forwardSelection(matrix, features,classes):
 	appendItem = 0.0	# current best item
 	maxscore = 0.0		# the overall top acc 
 
-	# find best
+	# find best - iterate cols
 	for i in range(0, features.shape[1]):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
 				score = crossoneout(matrix, classes, flist, j) 
 				#print("Current score = ",score)
-				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score, "%")
-				if(score >= topscore):
-					topscore = score 
+				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
+				if(score > topscore):
+					topscore = score
 					appendItem = j
 					
 		if(appendItem not in flist):			
@@ -68,6 +72,11 @@ def forwardSelection(matrix, features,classes):
 			
 	print("Finished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore ,"%")
 	return best
+	
+	
+def backwardElimination(matrix, features,classes):
+	print("backward elim...")
+
 
 #display algorithm UI
 def printAlgorithms():
@@ -84,7 +93,7 @@ def main():
 	matrix = np.loadtxt(fname, dtype = 'float')
 	
 	#save first column of classes
-	classes = matrix[:,0]	
+	classes = matrix[:,0]
 	features = matrix[:,1:]
 	
 	print("This dataset has ", features.shape[1] ," features (not including the class attribute), with ",len(features)," instances. \n")
@@ -97,5 +106,8 @@ def main():
 	
 	if(choice == "1"):
 		forwardSelection(matrix, features, classes) 
+		
+	if(choice == "2"):
+		backwardElimination(matrix, features, classes) 
 	
 if __name__ == "__main__": main()
