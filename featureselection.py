@@ -22,7 +22,6 @@ def crossoneout(matrix, classes, flist ,feat):
 	correct = 0				# number of correctly classified instances	
 
 	flist.append(feat)
-	print("length of flist: ",len(flist))
 	#iterate rows to test all instances
 	for i in range(0,len(matrix)):
 		for j in range(0,len(matrix)):
@@ -35,16 +34,15 @@ def crossoneout(matrix, classes, flist ,feat):
 					nearest = j
 		if(classes[i] == classes[nearest]):
 			correct += 1 #inc num of success classifications
-			
+		minDistance = 99999.0
 	flist.remove(feat)
 			
-	print("correct: ", correct, "total: ", len(matrix))
+	#print("correct: ", correct, "total: ", len(matrix))
 	return float(correct)/len(classes)
 			
 
 def forwardSelection(matrix, features,classes):
-
-	flist = [5,7,3] 			# list of features
+	flist = [] 	# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
 	appendItem = 0.0	# current best item
@@ -56,7 +54,7 @@ def forwardSelection(matrix, features,classes):
 			if(j not in flist):
 				#find score with current iteration
 				score = crossoneout(features, classes, flist, j) 
-				print("score: ",score)
+				#print("score: ",score)
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -99,7 +97,7 @@ def main():
 	#save first column of classes
 	classes = matrix[:,0]
 	features = matrix[:,1:]
-		
+			
 	print("This dataset has ", features.shape[1] ," features (not including the class attribute), with ",len(features)," instances. \n")
 	
 	print("Normalizing the data...\n")
