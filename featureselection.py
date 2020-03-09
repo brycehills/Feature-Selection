@@ -9,13 +9,18 @@ def normalize(X, x_min, x_max):
     denom[denom==0] = 1
     return x_min + nom/denom
 	
+def euclidean(A, B):
+	delta = A-B
+	square = math.pow(delta,2)
+	return square
+	
+
 def crossoneout(matrix, classes, flist ,feat):
 	dist = 0.0				# distance
+	delta = 0.0
 	minDistance = 9999.0	# current min distance
 	nn = 0					# nearest neighbor
 	correct = 0				# number of correctly classified instances	
-	total = 0
-	countlist = []
 
 	flist.append(feat)
 	
@@ -25,26 +30,24 @@ def crossoneout(matrix, classes, flist ,feat):
 			sum = 0.0		# re init sum
 			if(j!=i):		#do not calc dist to self (otherwise dist will be zero)
 				for k in range(0,len(flist)):	#only calc with specified features
-					total+=1
-					diff = matrix[j][flist[k]] - matrix[i][flist[k]]
-					square = math.pow(diff,2)
-					sum += square   
+					sum +=  euclidean(matrix[j][flist[k]], matrix[i][flist[k]])
 				dist = math.sqrt(sum)
+				
 				if(dist < minDistance):
 					minDistance = dist
-					nn = j
-		if(classes[i] == classes[nn]):
-			correct = correct + 1 #inc num of success classifications
+					nearest = j
+		if(classes[i] == classes[nearest]):
+			correct += 1 #inc num of success classifications
 			
 	flist.remove(feat)
 			
-	print("correct: ", correct, "total: ", total)
-	return correct/total
+	print("correct: ", correct, "total: ", len(matrix))
+	return float(correct)/len(matrix)
 			
 
 def forwardSelection(matrix, features,classes):
 
-	flist = [] 			# list of features
+	flist = [5,7,3] 			# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
 	appendItem = 0.0	# current best item
@@ -55,22 +58,25 @@ def forwardSelection(matrix, features,classes):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				score = crossoneout(matrix, classes, flist, j) 
-				#print("Current score = ",score)
+				score = crossoneout(features, classes, flist, j) 
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
 					appendItem = j
-					
-		if(appendItem not in flist):			
-			flist.append(appendItem)
-		
+				
 		#make sure we save the actual best combination of feats
 		if(topscore > maxscore):
 			maxscore = topscore
-			best = flist
+			best = flist.copy()
+			best.append(appendItem)
 			
-	print("Finished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore ,"%")
+		topscore = 0.0 #reset to find local maxima
+		
+		if(appendItem not in flist):			
+			flist.append(appendItem)
+
+			
+	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore ,"%")
 	return best
 	
 	
@@ -95,7 +101,7 @@ def main():
 	#save first column of classes
 	classes = matrix[:,0]
 	features = matrix[:,1:]
-	
+		
 	print("This dataset has ", features.shape[1] ," features (not including the class attribute), with ",len(features)," instances. \n")
 	
 	print("Normalizing the data...\n")
