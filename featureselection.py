@@ -9,30 +9,27 @@ def normalize(X, x_min, x_max):
     denom[denom==0] = 1
     return x_min + nom/denom
 	
-def euclidean(A, B):
-	delta = A-B
-	square = math.pow(delta,2)
-	return square
-	
+def euclidean(A, B, flist):
+	sum = 0.0
+	for k in range(0,len(flist)):
+		delta = A[flist[k]]-B[flist[k]]
+		sum += math.pow(delta,2)
+	return math.sqrt(sum)
 
 def crossoneout(matrix, classes, flist ,feat):
 	dist = 0.0				# distance
-	delta = 0.0
-	minDistance = 9999.0	# current min distance
-	nn = 0					# nearest neighbor
+	minDistance = 99999.0	# current min distance
 	correct = 0				# number of correctly classified instances	
 
 	flist.append(feat)
-	
+	print("length of flist: ",len(flist))
 	#iterate rows to test all instances
 	for i in range(0,len(matrix)):
 		for j in range(0,len(matrix)):
-			sum = 0.0		# re init sum
 			if(j!=i):		#do not calc dist to self (otherwise dist will be zero)
-				for k in range(0,len(flist)):	#only calc with specified features
-					sum +=  euclidean(matrix[j][flist[k]], matrix[i][flist[k]])
-				dist = math.sqrt(sum)
-				
+			
+				dist = euclidean(matrix[i], matrix[j],flist)
+		
 				if(dist < minDistance):
 					minDistance = dist
 					nearest = j
@@ -42,7 +39,7 @@ def crossoneout(matrix, classes, flist ,feat):
 	flist.remove(feat)
 			
 	print("correct: ", correct, "total: ", len(matrix))
-	return float(correct)/len(matrix)
+	return float(correct)/len(classes)
 			
 
 def forwardSelection(matrix, features,classes):
@@ -59,6 +56,7 @@ def forwardSelection(matrix, features,classes):
 			if(j not in flist):
 				#find score with current iteration
 				score = crossoneout(features, classes, flist, j) 
+				print("score: ",score)
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
