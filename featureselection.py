@@ -16,12 +16,15 @@ def euclidean(A, B, flist):
 		sum += math.pow(delta,2)
 	return math.sqrt(sum)
 
-def crossoneout(matrix, classes, flist ,feat):
+def crossoneout(matrix, classes, flist ,feat,forwards):
 	dist = 0.0				# distance
 	minDistance = 99999.0	# current min distance
 	correct = 0				# number of correctly classified instances	
 
-	flist.append(feat)
+	if(forwards == 1):
+		flist.append(feat)
+	else:
+		flist.remove(feat)
 	#iterate rows to test all instances
 	for i in range(0,len(matrix)):
 		for j in range(0,len(matrix)):
@@ -35,9 +38,12 @@ def crossoneout(matrix, classes, flist ,feat):
 		if(classes[i] == classes[nearest]):
 			correct += 1 #inc num of success classifications
 		minDistance = 99999.0
-	flist.remove(feat)
+		
+	if(forwards == 1):
+		flist.remove(feat)
+	else:
+		flist.append(feat)
 			
-	#print("correct: ", correct, "total: ", len(matrix))
 	return float(correct)/len(classes)
 			
 
@@ -53,7 +59,7 @@ def forwardSelection(matrix, features,classes):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j) 
+				score = crossoneout(features, classes, flist, j,1) 
 				#print("score: ",score)
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
@@ -72,12 +78,44 @@ def forwardSelection(matrix, features,classes):
 			flist.append(appendItem)
 
 			
-	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore ,"%")
+	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore*100 ,"%")
 	return best
 	
 	
 def backwardElimination(matrix, features,classes):
-	print("backward elim...")
+	flist = [] 			# list of features
+	best = []			# list of features with highest accuracy
+	topscore = 0.0		# the current max accuracy score
+	appendItem = 0.0	# current best item
+	maxscore = 0.0		# the overall top acc 
+	
+	# initialize flist
+	for i in range(0, features.shape[1]):
+		flist.append(i)
+
+	# find best - iterate cols
+	for i in range(0, features.shape[1]):
+		for j in range(0, features.shape[1]):
+			if(j in flist):
+			
+				#find score with current iteration
+				score = crossoneout(features, classes, flist, j,2) 
+				print("Removing feature(s): ", j , " from set ", str(flist), ", accuracy is: ", score*100, "%")
+				if(score > topscore):
+					topscore = score
+					appendItem = j
+					
+		#make sure we save the actual best combination of feats
+		if(topscore > maxscore):
+			maxscore = topscore
+			best = flist.copy()
+			best.remove(appendItem)
+			
+		topscore = 0.0 #reset to find local maxima
+		flist.remove(appendItem)
+		
+	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore*100 ,"%")
+	return best
 
 
 #display algorithm UI
