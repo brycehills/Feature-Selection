@@ -16,10 +16,13 @@ def euclidean(A, B, flist):
 		sum += math.pow(delta,2)
 	return math.sqrt(sum)
 
-def crossoneout(matrix, classes, flist ,feat,forwards):
+def crossoneout(matrix, classes, flist ,feat,forwards,k):
 	dist = 0.0				# distance
 	minDistance = 99999.0	# current min distance
 	correct = 0				# number of correctly classified instances	
+	neighborlist = []		# store nearest distances
+	class1 = 0 
+	class2 = 0
 
 	if(forwards == 1):
 		flist.append(feat)
@@ -33,21 +36,50 @@ def crossoneout(matrix, classes, flist ,feat,forwards):
 				dist = euclidean(matrix[i], matrix[j],flist)
 		
 				if(dist < minDistance):
+					neighborlist.insert(0,j)
 					minDistance = dist
 					nearest = j
-		if(classes[i] == classes[nearest]):
-			correct += 1 #inc num of success classifications
+					
+		# copy list of k nearest item
+		knearest = neighborlist[0:k-1]
+
+		# count classes of neighbors to determine classification
+		for item in knearest:
+			if classes[item] == 1:
+				class1+=1
+			else:
+				class2+=1
+		
+		# determine majority classification
+		if(class1>class2):
+			majorityClass = 1
+		else:
+			majorityClass = 2
+		
+		# check if correct class and count++ if so
+		if(classes[i] == majorityClass):
+			correct+=1
+			
+		# reinitialize counters
+		class1 = 0
+		class2 = 0
+		
+					
+					
+		#if(classes[i] == classes[nearest]):
+			#correct += 1 #inc num of success classifications
+			
 		minDistance = 99999.0
 		
 	if(forwards == 1):
 		flist.remove(feat)
 	else:
-		flist.append(feat)
+		flist.insert(0,feat)
 			
 	return float(correct)/len(classes)
 			
 
-def forwardSelection(matrix, features,classes):
+def forwardSelection(matrix, features,classes,k):
 	flist = [] 	# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
@@ -59,7 +91,7 @@ def forwardSelection(matrix, features,classes):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j,1) 
+				score = crossoneout(features, classes, flist, j,1,k) 
 				#print("score: ",score)
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
@@ -82,7 +114,7 @@ def forwardSelection(matrix, features,classes):
 	return best
 	
 	
-def backwardElimination(matrix, features,classes):
+def backwardElimination(matrix, features,classes,k):
 	flist = [] 			# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
@@ -99,7 +131,7 @@ def backwardElimination(matrix, features,classes):
 			if(j in flist):
 			
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j,2) 
+				score = crossoneout(features, classes, flist, j,2,k) 
 				print("Removing feature(s): ", j , " from set ", str(flist), ", accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -128,7 +160,7 @@ def main():
 	#prompt for input file
 	print("Welcome to Bryce's Feature Selection Algorithm.\n")
 	fname = input('Type in the the name of the file to test:  ') 
-
+	k = int(input('Select k for nearest neighbor:  '))
 	#read file into matrix:
 	matrix = np.loadtxt(fname, dtype = 'float')
 	
@@ -145,9 +177,9 @@ def main():
 	choice = input("\nEnter Selection: ")
 	
 	if(choice == "1"):
-		forwardSelection(matrix, features, classes) 
+		forwardSelection(matrix, features, classes,k) 
 		
 	if(choice == "2"):
-		backwardElimination(matrix, features, classes) 
+		backwardElimination(matrix, features, classes,k) 
 	
 if __name__ == "__main__": main()
