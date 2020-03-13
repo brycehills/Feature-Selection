@@ -1,14 +1,16 @@
 import numpy as np
 import math
 import sys
-# the small dataset, accuracy can be 0.89  when using only features 5 7 3; while on the large dataset, accuracy can be 0.949 when using only features 27 15 1.
+# INSTRUCIONS: the small dataset, accuracy can be 0.89  when using only features 5 7 3; while on the large dataset, accuracy can be 0.949 when using only features 27 15 1.
+
 #ref - https://datascience.stackexchange.com/questions/39142/normalize-matrix-in-python-numpy
 def normalize(X, x_min, x_max):
     nom = (X-X.min(axis=0))*(x_max-x_min)
     denom = X.max(axis=0) - X.min(axis=0)
     denom[denom==0] = 1
     return x_min + nom/denom
-	
+
+#return euclidean distance given to objects and a list of features.
 def euclidean(A, B, flist):
 	sum = 0.0
 	for k in range(0,len(flist)):
