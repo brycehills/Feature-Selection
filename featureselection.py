@@ -41,11 +41,12 @@ def crossoneout(matrix, classes, flist ,feat,forwards,k):
 					nearest = j
 					
 		# copy list of k nearest item
-		knearest = neighborlist[0:k-1]
+		knearest = neighborlist[0:k]
+		#print("knearest",str(knearest))
 
 		# count classes of neighbors to determine classification
 		for item in knearest:
-			if classes[item] == 1:
+			if classes[item] == 1.0:
 				class1+=1
 			else:
 				class2+=1
@@ -63,11 +64,6 @@ def crossoneout(matrix, classes, flist ,feat,forwards,k):
 		# reinitialize counters
 		class1 = 0
 		class2 = 0
-		
-					
-					
-		#if(classes[i] == classes[nearest]):
-			#correct += 1 #inc num of success classifications
 			
 		minDistance = 99999.0
 		
@@ -91,8 +87,7 @@ def forwardSelection(matrix, features,classes,k):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j,1,k) 
-				#print("score: ",score)
+				score = crossoneout(features, classes, flist, j, 1, k) 
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -129,9 +124,8 @@ def backwardElimination(matrix, features,classes,k):
 	for i in range(0, features.shape[1]):
 		for j in range(0, features.shape[1]):
 			if(j in flist):
-			
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j,2,k) 
+				score = crossoneout(features, classes, flist, j, 2 ,k) # the 2 flags that this is backwards-elim for crossoneout
 				print("Removing feature(s): ", j , " from set ", str(flist), ", accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -160,17 +154,18 @@ def main():
 	#prompt for input file
 	print("Welcome to Bryce's Feature Selection Algorithm.\n")
 	fname = input('Type in the the name of the file to test:  ') 
-	k = int(input('Select k for nearest neighbor:  '))
+	k = int(input('\nSelect k for nearest neighbor:  '))
+	
 	#read file into matrix:
 	matrix = np.loadtxt(fname, dtype = 'float')
 	
 	#save first column of classes
 	classes = matrix[:,0]
 	features = matrix[:,1:]
-			
+				
 	print("This dataset has ", features.shape[1] ," features (not including the class attribute), with ",len(features)," instances. \n")
 	
-	print("Normalizing the data...\n")
+	print("Normalizing the data...")
 	features = normalize(features, np.min(features), np.max(features))
 	
 	printAlgorithms()
@@ -180,6 +175,6 @@ def main():
 		forwardSelection(matrix, features, classes,k) 
 		
 	if(choice == "2"):
-		backwardElimination(matrix, features, classes,k) 
+		backwardElimination(matrix, features, classes, k) 
 	
 if __name__ == "__main__": main()
