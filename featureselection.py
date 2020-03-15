@@ -125,7 +125,7 @@ def backwardElimination(matrix, features,classes,k):
 	# find best - iterate cols
 	for i in range(0, features.shape[1]):
 		for j in range(0, features.shape[1]):
-			if(j in flist):
+			if(j in flist and len(flist)>1):
 				#find score with current iteration
 				score = crossoneout(features, classes, flist, j, 2 ,k) # the 2 flags that this is backwards-elim for crossoneout
 				print("Removing feature(s): ", j , " from set ", str(flist), ", accuracy is: ", score*100, "%")
@@ -140,7 +140,8 @@ def backwardElimination(matrix, features,classes,k):
 			best.remove(appendItem)
 			
 		topscore = 0.0 #reset to find local maxima
-		flist.remove(appendItem)
+		if(appendItem in flist):
+			flist.remove(appendItem)
 		
 	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore*100 ,"%")
 	return best
