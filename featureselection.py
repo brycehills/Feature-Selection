@@ -1,6 +1,9 @@
 import numpy as np
 import math
+import time
 import sys
+from numba import jit  #https://stackoverflow.com/questions/46808362/how-to-use-numba-jit-with-methods
+
 # INSTRUCIONS: the small dataset, accuracy can be 0.89  when using only features 5 7 3; while on the large dataset, accuracy can be 0.949 when using only features 27 15 1.
 
 #ref - https://datascience.stackexchange.com/questions/39142/normalize-matrix-in-python-numpy
@@ -11,14 +14,24 @@ def normalize(X, x_min, x_max):
     return x_min + nom/denom
 
 #return euclidean distance given to objects and a list of features.
+@jit #https://numba.pydata.org/numba-doc/dev/index.html
+def customeuclidean(A, B, flist):
+	sum = 0.0
+	for k in range(0,len(flist)):
+		delta = A[flist[k]]-B[flist[k]]
+		sum += delta*delta
+	return math.sqrt(sum)
+	
+#return euclidean distance given to objects and a list of features.
 def euclidean(A, B, flist):
 	sum = 0.0
 	for k in range(0,len(flist)):
 		delta = A[flist[k]]-B[flist[k]]
-		sum += math.pow(delta,2)
+		sum += delta*delta
 	return math.sqrt(sum)
 
-def crossoneout(matrix, classes, flist ,feat,forwards,k):
+
+def crossoneout(matrix, classes, flist ,feat,forwards,k,custom):
 	dist = 0.0				# distance
 	minDistance = 99999.0	# current min distance
 	correct = 0				# number of correctly classified instances	
@@ -34,8 +47,12 @@ def crossoneout(matrix, classes, flist ,feat,forwards,k):
 	for i in range(0,len(matrix)):
 		for j in range(0,len(matrix)):
 			if(j!=i):		#do not calc dist to self (otherwise dist will be zero)
-			
-				dist = euclidean(matrix[i], matrix[j],flist)
+				
+				if(custom == 1):
+					flist_np = np.array(flist)
+					dist = customeuclidean(matrix[i], matrix[j],flist_np)
+				else:
+					dist = euclidean(matrix[i], matrix[j],flist)
 		
 				if(dist < minDistance):
 					neighborlist.insert(0,j)
@@ -77,7 +94,7 @@ def crossoneout(matrix, classes, flist ,feat,forwards,k):
 	return float(correct)/len(classes)
 			
 
-def forwardSelection(matrix, features,classes,k):
+def forwardSelection(matrix, features,classes,k,custom):
 	flist = [] 	# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
@@ -89,7 +106,7 @@ def forwardSelection(matrix, features,classes,k):
 		for j in range(0, features.shape[1]):
 			if(j not in flist):
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j, 1, k) 
+				score = crossoneout(features, classes, flist, j, 1, k, custom) 
 				print("Using feature(s): {", str(flist), ", ",j, "}", "accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -109,7 +126,6 @@ def forwardSelection(matrix, features,classes,k):
 			
 	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore*100 ,"%")
 	return best
-	
 	
 def backwardElimination(matrix, features,classes,k):
 	flist = [] 			# list of features
@@ -174,10 +190,18 @@ def main():
 	printAlgorithms()
 	choice = input("\nEnter Selection: ")
 	
+	start = time.time()
+	
 	if(choice == "1"):
-		forwardSelection(matrix, features, classes,k) 
+		forwardSelection(matrix, features, classes,k,0) 
 		
 	if(choice == "2"):
 		backwardElimination(matrix, features, classes, k) 
+		
+	if(choice == "3"):
+		forwardSelection(matrix, features, classes, k,1) 
+		
+	end = time.time()
+	print("Time Elapsed = %s" % (end - start))
 	
 if __name__ == "__main__": main()
