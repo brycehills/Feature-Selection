@@ -127,7 +127,7 @@ def forwardSelection(matrix, features,classes,k,custom):
 	print("\n\nFinished search!! The best feature subset is ", str(best) ," which has an accuracy of ", maxscore*100 ,"%")
 	return best
 	
-def backwardElimination(matrix, features,classes,k):
+def backwardElimination(matrix, features,classes,k,custom):
 	flist = [] 			# list of features
 	best = []			# list of features with highest accuracy
 	topscore = 0.0		# the current max accuracy score
@@ -143,7 +143,7 @@ def backwardElimination(matrix, features,classes,k):
 		for j in range(0, features.shape[1]):
 			if(j in flist and len(flist)>1):
 				#find score with current iteration
-				score = crossoneout(features, classes, flist, j, 2 ,k) # the 2 flags that this is backwards-elim for crossoneout
+				score = crossoneout(features, classes, flist, j, 2 ,k,0) # the 2 flags that this is backwards-elim for crossoneout
 				print("Removing feature(s): ", j , " from set ", str(flist), ", accuracy is: ", score*100, "%")
 				if(score > topscore):
 					topscore = score
@@ -175,7 +175,7 @@ def main():
 	fname = input('Type in the the name of the file to test:  ') 
 	k = int(input('\nSelect k for nearest neighbor:  '))
 	
-	#read file into matrix:
+	#read file into matrix: #https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
 	matrix = np.loadtxt(fname, dtype = 'float')
 	
 	#save first column of classes
@@ -196,7 +196,7 @@ def main():
 		forwardSelection(matrix, features, classes,k,0) 
 		
 	if(choice == "2"):
-		backwardElimination(matrix, features, classes, k) 
+		backwardElimination(matrix, features, classes, k,0) 
 		
 	if(choice == "3"):
 		forwardSelection(matrix, features, classes, k,1) 
